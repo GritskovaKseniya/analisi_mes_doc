@@ -91,13 +91,15 @@ CREATE TABLE IF NOT EXISTS table_cells (
     cell_text       TEXT
 );
 
--- Full-text search su paragrafi e parametri
-CREATE VIRTUAL TABLE IF NOT EXISTS fts_content USING fts5(
+-- Full-text search: tabella standalone popolata esplicitamente
+-- Colonne UNINDEXED non vengono indicizzate ma sono disponibili nei risultati
+CREATE VIRTUAL TABLE IF NOT EXISTS fts_paragraphs USING fts5(
     text,
-    doc_label UNINDEXED,
+    doc_label    UNINDEXED,
+    doc_filename UNINDEXED,
     section_title UNINDEXED,
-    content='paragraphs',
-    content_rowid='id'
+    paragraph_id  UNINDEXED,
+    tokenize = 'unicode61 remove_diacritics 1'
 );
 """
 
@@ -387,6 +389,33 @@ def extract_document(conn: sqlite3.Connection, source: dict,
 
 
 # ---------------------------------------------------------------------------
+# FTS5 index build
+# ---------------------------------------------------------------------------
+
+def build_fts(conn: sqlite3.Connection, log: logging.Logger):
+    """Popola (o ricostruisce) l'indice FTS5 da paragraphs + metadati."""
+    log.info("Costruzione indice FTS5...")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM fts_paragraphs")
+    cur.execute("""
+        INSERT INTO fts_paragraphs (text, doc_label, doc_filename, section_title, paragraph_id)
+        SELECT
+            p.text,
+            d.label,
+            d.filename,
+            COALESCE(s.title, ''),
+            p.id
+        FROM paragraphs p
+        JOIN documents d ON p.document_id = d.id
+        LEFT JOIN sections s ON p.section_id = s.id
+        WHERE length(p.text) > 2
+    """)
+    n = cur.execute("SELECT count(*) FROM fts_paragraphs").fetchone()[0]
+    conn.commit()
+    log.info(f"FTS5 pronto: {n} righe indicizzate")
+
+
+# ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
 
@@ -426,6 +455,8 @@ def main():
                         help="Processa solo i file il cui label contiene questa stringa")
     parser.add_argument("--dry-run", action="store_true",
                         help="Simula l'estrazione senza scrivere sul DB")
+    parser.add_argument("--build-fts", action="store_true",
+                        help="(Ri)costruisce solo l'indice FTS5 senza riestrarre i documenti")
     args = parser.parse_args()
 
     cfg = yaml.safe_load(open(args.config, encoding="utf-8"))
@@ -441,6 +472,13 @@ def main():
     if not args.dry_run:
         conn = setup_db(cfg["database"]["path"], cfg["database"]["recreate_on_run"])
         log.info("Schema DB creato/verificato")
+
+    # Modalità solo FTS rebuild
+    if args.build_fts:
+        if conn:
+            build_fts(conn, log)
+            conn.close()
+        return
 
     sources = cfg["sources"]
     if args.only:
@@ -465,7 +503,9 @@ def main():
              f"parametri={total['parameters']}  "
              f"tempo={total['duration_ms']}ms")
 
-    if conn:
+    # Costruisce FTS dopo estrazione (sempre, a meno di dry-run)
+    if conn and not args.dry_run:
+        build_fts(conn, log)
         conn.close()
 
 
