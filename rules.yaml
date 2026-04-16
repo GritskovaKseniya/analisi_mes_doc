@@ -1,0 +1,217 @@
+# ============================================================
+# rules.yaml — Configurazione estrazione documenti MES
+# Modifica questo file per cambiare quali file analizzare
+# e come interpretare il contenuto.
+# ============================================================
+
+# --- Percorso base dei documenti sorgente ---
+base_path: "\\\\rete-ud-2\\Documents\\eDox\\projects\\095 - Servizi_Mes_per_JAS\\SPECIFICHE"
+
+# --- File da includere nell'analisi ---
+# Usa glob pattern relativi a base_path
+# Commenta una riga con # per escluderla temporaneamente
+sources:
+  - path: "FONTANA/Fontana_standard.r01.docx"
+    label: "Fontana Standard"
+    tags: [fontana, automatismi, configurazione]
+
+  - path: "MES_WEB_SERVIZI.r06.docx"
+    label: "MES Web Servizi"
+    tags: [mes_web, servizi, setup]
+
+  - path: "MES_WEB_BATCH_SPLIT.r01.docx"
+    label: "MES Web Batch Split"
+    tags: [mes_web, batch]
+
+  - path: "MES_WEB_COLLEGATE.r01.docx"
+    label: "MES Web Ordini Collegate"
+    tags: [mes_web, ordini]
+
+  - path: "MES_WEB_CONFIG_UMV.r01.docx"
+    label: "MES Web Config UMV"
+    tags: [mes_web, umv, configurazione]
+
+  - path: "MES_WEB_COPRODOTTI&SMONTAGGI.r01.docx"
+    label: "MES Web Co-prodotti e Smontaggi"
+    tags: [mes_web, coprodotti]
+
+  - path: "MES_WEB_KPI.r01.docx"
+    label: "MES Web KPI"
+    tags: [mes_web, kpi]
+
+  - path: "MES_WEB_LEGAMI.r01.docx"
+    label: "MES Web Legami"
+    tags: [mes_web, legami]
+
+  - path: "MES_WEB_LINEE_COMANDATE.r01.docx"
+    label: "MES Web Linee Comandate"
+    tags: [mes_web, linee]
+
+  - path: "MES_WEB_MAC_AUTO_NON_INT.r01.docx"
+    label: "MES Web Macchine Auto Non Interattive"
+    tags: [mes_web, macchine]
+
+  - path: "MES_WEB_MATRICOLE.r02.docx"
+    label: "MES Web Matricole"
+    tags: [mes_web, matricole]
+
+  - path: "MES_WEB_MAT_AGG_SOST.r01.docx"
+    label: "MES Web Materiali Aggiuntivi/Sostitutivi"
+    tags: [mes_web, materiali]
+
+  - path: "MES_WEB_MICRO.r01.docx"
+    label: "MES Web Micro"
+    tags: [mes_web, micro]
+
+  - path: "MES_WEB_MULTIPALLET.r01.docx"
+    label: "MES Web Multipallet"
+    tags: [mes_web, pallet]
+
+  - path: "MES_WEB_Matricole_EXT.r01.docx"
+    label: "MES Web Matricole Esterne"
+    tags: [mes_web, matricole, esterno]
+
+  - path: "MES_WEB_OPERATORE.r01.docx"
+    label: "MES Web Operatore"
+    tags: [mes_web, operatore]
+
+  - path: "MES_WEB_OPE_IMPRODUTTIVE.r05.docx"
+    label: "MES Web Operazioni Improduttive"
+    tags: [mes_web, improduttive]
+
+  - path: "MES_WEB_OPE_PREL_MAN.r02.docx"
+    label: "MES Web Operazioni Prelievo Manuale"
+    tags: [mes_web, prelievo]
+
+  - path: "MES_WEB_PDA.r01.docx"
+    label: "MES Web PDA"
+    tags: [mes_web, pda]
+
+  - path: "MES_WEB_PRENOTAZIONI.r01.docx"
+    label: "MES Web Prenotazioni"
+    tags: [mes_web, prenotazioni]
+
+  - path: "MES_WEB_QUADRATURA_TEMPI.r01.docx"
+    label: "MES Web Quadratura Tempi"
+    tags: [mes_web, tempi]
+
+  - path: "MES_WEB_RICHIESTE_PROD.r01.docx"
+    label: "MES Web Richieste Produzione"
+    tags: [mes_web, richieste]
+
+  - path: "MES_WEB_SFC_TEMPI_PEZZI_FUORI_LINEA.r01.docx"
+    label: "MES Web SFC Tempi Pezzi Fuori Linea"
+    tags: [mes_web, sfc, tempi]
+
+  - path: "MES_WEB_SILOS.r01.docx"
+    label: "MES Web Silos"
+    tags: [mes_web, silos]
+
+  - path: "MES_WEB_TRASPORTO_UMV.r01.docx"
+    label: "MES Web Trasporto UMV"
+    tags: [mes_web, umv, trasporto]
+
+  - path: "MES_WEB_TURNI.r01.docx"
+    label: "MES Web Turni"
+    tags: [mes_web, turni]
+
+  - path: "MES_WEB_WORKLIST.r01.docx"
+    label: "MES Web Worklist"
+    tags: [mes_web, worklist]
+
+  - path: "NIGRIS_MES_WEB_SERVIZI.r06.docx"
+    label: "Nigris MES Web Servizi"
+    tags: [nigris, servizi]
+
+# --- Stili Word che indicano un titolo di sezione ---
+heading_styles:
+  - "Heading 1"
+  - "Heading 2"
+  - "Heading 3"
+  - "Heading 4"
+  - "Titolo 1"
+  - "Titolo 2"
+  - "Titolo 3"
+
+# --- Stili da ignorare (metadati, revisioni, ecc.) ---
+# I paragrafi con questi stili vengono salvati ma con flag ignored=true
+ignore_styles: []
+
+# --- Rilevamento parametri di configurazione ---
+# Pattern regex per linee tipo: NOME_PARAMETRO = valore
+# o NOME_PARAMETRO= valore  o  NOME_PARAMETRO=valore
+parameter_patterns:
+  # Formato: NOME_TUTTO_MAIUSCOLO = qualcosa
+  - pattern: '^([A-Z][A-Z0-9_]{2,})\s*=\s*(.+)$'
+    name: "key_value_uppercase"
+    description: "Parametri stile NOME=VALORE (tutto maiuscolo)"
+
+  # Formato: export NOME=valore (stile shell)
+  - pattern: '^export\s+([A-Z][A-Z0-9_]{2,})\s*=\s*(.+)$'
+    name: "shell_export"
+    description: "Parametri stile shell: export NOME=VALORE"
+
+  # Formato tabellare: nome parametro in colonna 0, valore in colonna 1
+  # Usato quando una tabella ha 2+ colonne e la prima cella è TUTTO_MAIUSCOLO
+  # Questo pattern non è regex — è gestito separatamente dall'extractor
+  - pattern: 'table_col0_col1'
+    name: "table_key_value"
+    description: "Parametri in tabella — nome cella[0], valore cella[1] (attivato quando col0 è maiuscolo)"
+
+  # Formato snake_case minuscolo (stile nomi campo DB) — risolve Fontana
+  # Valore vincolato a: numero intero, stringa quoted, o lettera singola
+  # Questo esclude "se X = Y" perché Y è quasi sempre testo libero
+  - pattern: '^([a-z][a-z0-9_]{2,})\s*=\s*([0-9]+|''[^'']*''|"[^"]*"|[A-Z])\s*$'
+    name: "key_value_snakecase"
+    description: "Parametri stile DB: campo_nome = valore numerico o stringa quoted"
+
+  # Parametri maiuscoli inline nel testo — cattura NOME=valore anche dentro frasi
+  # Valore vincolato a numero intero (quasi tutti i parametri config MES sono 0/1/2...)
+  # Non cattura NOME=testo_libero per evitare falsi positivi narrativi
+  - pattern: '([A-Z][A-Z0-9_]{2,})\s*=\s*([0-9]+)'
+    name: "inline_uppercase_param"
+    description: "Parametri maiuscoli inline nel testo — NOME=valore numerico anche in mezzo a frasi"
+
+# --- Filtri contenuto ---
+extraction:
+  # Paragrafi con testo più corto di N caratteri vengono comunque salvati
+  # ma con flag short_text=true (potrebbero essere rumore)
+  min_text_length: 2
+
+  # Ignora paragrafi completamente vuoti
+  skip_empty: true
+
+  # Estrai il contenuto delle tabelle
+  extract_tables: true
+
+  # Encoding fallback se il docx ha caratteri speciali
+  encoding_fallback: "latin-1"
+
+# --- Database output ---
+database:
+  path: "data/mes_docs.db"
+
+  # ATTENZIONE: recreate_on_run: true cancella e ricrea il DB ad ogni run.
+  # Utile in sviluppo per partire pulito.
+  # Mettere su FALSE in produzione, altrimenti si perdono tutti i dati ad ogni esecuzione.
+  # Modalità incrementale (false): aggiorna solo i documenti modificati (confronto per data file).
+  recreate_on_run: true  # <-- cambia in false prima di andare in produzione
+
+  # Strategia per le revisioni dei documenti (es. r06 → r07)
+  # "replace"   : sovrascrive il documento precedente (stesso filename senza revisione)
+  # "keep_all"  : mantiene tutte le revisioni — permette di confrontare r06 vs r07
+  # Default: replace (più semplice, meno spazio)
+  revision_strategy: "replace"
+
+# --- Export JSON ---
+json_export:
+  enabled: false
+  output_dir: "export/"
+  # one_file_per_document: esporta un JSON per ogni documento
+  # single_file: tutto in un unico file (può essere grande)
+  mode: "one_file_per_document"
+
+# --- Logging ---
+logging:
+  level: "INFO"   # DEBUG, INFO, WARNING, ERROR
+  log_file: "data/extraction.log"

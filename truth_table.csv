@@ -1,0 +1,26 @@
+id,source_file,raw_text,detected_key,detected_value,pattern_name,our_confidence,true_label,notes
+1,MES_WEB_SERVIZI.r06,WMS_ABIL_GIACENZE_SU_UMV=1  i servizi partono solo con questo setup,WMS_ABIL_GIACENZE_SU_UMV,1,key_value_uppercase,HIGH,TP,Parametro di configurazione chiaro — linea dedicata
+2,MES_WEB_SERVIZI.r06,RADA_AVANZAMENTO_QTA_TEMPO_REALE=2,RADA_AVANZAMENTO_QTA_TEMPO_REALE,2,key_value_uppercase,HIGH,TP,Linea corta dedicata al parametro
+3,MES_WEB_SERVIZI.r06,RADAEXP_VERSAM_FLAG_CHIUSURA=1,RADAEXP_VERSAM_FLAG_CHIUSURA,1,key_value_uppercase,HIGH,TP,Linea corta dedicata al parametro
+4,MES_WEB_SERVIZI.r06,PM_GEST_SCARTI_DECR_QT_DISP = 0  DEFAULT,PM_GEST_SCARTI_DECR_QT_DISP,0,key_value_uppercase,HIGH,TP,Linea dedicata con annotazione DEFAULT
+5,MES_WEB_SERVIZI.r06,WMS_ELIMINA_MOV_AVA_UMV_STORNATA =  1,WMS_ELIMINA_MOV_AVA_UMV_STORNATA,1,key_value_uppercase,HIGH,TP,Linea dedicata
+6,MES_WEB_SERVIZI.r06,WMS_TIPO_SERVIZIO_VERSAMENTO= 1 --> comportamento attuale,WMS_TIPO_SERVIZIO_VERSAMENTO,1,key_value_uppercase,HIGH,TP,Linea dedicata con commento inline
+7,MES_WEB_SERVIZI.r06,STORNO = 0,STORNO,0,key_value_uppercase,HIGH,VERIFY,Parola generica — potrebbe essere variabile SQL o parametro. Verificare contesto della sezione
+8,MES_WEB_SERVIZI.r06,STORNO = 1,STORNO,1,key_value_uppercase,HIGH,VERIFY,Stesso caso del precedente
+9,MES_WEB_SERVIZI.r06,SOGLIA = 300,SOGLIA,300,key_value_uppercase,HIGH,VERIFY,Parola generica — verificare se è soglia di configurazione o variabile locale
+10,MES_WEB_SERVIZI.r06,radaid=8,radaid,8,key_value_snakecase,HIGH,FP,Dato ambiente di test (rete-ud-20 / radaid) — non è un parametro di configurazione MES
+11,MES_WEB_SERVIZI.r06,jas=9015,jas,9015,key_value_snakecase,HIGH,FP,Porta JAS ambiente di test — non è un parametro di configurazione MES
+12,MES_WEB_SERVIZI.r06,fvirt_ck=1,fvirt_ck,1,key_value_snakecase,HIGH,VERIFY,Nome campo DB — verificare se è configurazione o condizione SQL
+13,MES_WEB_SERVIZI.r06,(RISCAP_ODP_BOlla = 72155  AND RISCAP_ODP_OPERA = 10 ) OR...,RISCAP_ODP_OPERA,10,inline_uppercase_param,HIGH,FP,Dentro una query SQL (AND/OR) — è una condizione WHERE non un parametro
+14,MES_WEB_SERVIZI.r06,Cerca INTER_MAC_1UMV=1.,INTER_MAC_1UMV,1,inline_uppercase_param,HIGH,VERIFY,Inline in frase — potrebbe essere parametro citato o valore da settare
+15,MES_WEB_SERVIZI.r06,Si blocca la spalmatura tempi con WMS_CUCITE_SPALMA_TEMPO_MADRE=0,WMS_CUCITE_SPALMA_TEMPO_MADRE,0,inline_uppercase_param,HIGH,TP,Frase descrive comportamento quando parametro vale 0 — è un parametro reale
+16,MES_WEB_SERVIZI.r06,Quanto segue si effettua se WMS_ABIL_GESTIONE_PRENOTAZIONI=1,WMS_ABIL_GESTIONE_PRENOTAZIONI,1,inline_uppercase_param,HIGH,TP,Condizione funzionale — il parametro è reale anche se inline
+17,Fontana_standard.r01,WMS_MULTIPALLET_CON_TEMPI_A_MATRICOLA= 1,WMS_MULTIPALLET_CON_TEMPI_A_MATRICOLA,1,key_value_uppercase,HIGH,TP,Linea dedicata — parametro reale Fontana
+18,Fontana_standard.r01,select Macchina_ST from rd_stati where STATO_ST=15,STATO_ST,15,inline_uppercase_param,HIGH,FP,Dentro una query SQL SELECT/WHERE — è un valore di filtro non un parametro
+19,Fontana_standard.r01,I seguenti blocchi si attivano  CUSTOM con FONT_MATRICOLE_CQ_SOLO_IN_MACCHINA=1,FONT_MATRICOLE_CQ_SOLO_IN_MACCHINA,1,inline_uppercase_param,MEDIUM,TP,Descrive un custom Fontana — parametro reale anche se inline
+20,Fontana_standard.r01,se WMS_USCITA_RESET_ATTIVITA=1 e in Fontana è cosi allora alla uscita fa la disaggregazione,WMS_USCITA_RESET_ATTIVITA,1,inline_uppercase_param,LOW,TP,Inizia con "se" (abbassa confidenza) ma il parametro è reale — falso LOW
+21,Fontana_standard.r01,Se WMS_POSTAZIONI_DISAGGREGA_ALLO_STOP= 2 quanto sotto non vale,WMS_POSTAZIONI_DISAGGREGA_ALLO_STOP,2,inline_uppercase_param,MEDIUM,TP,Parametro reale — valore 2 ha significato specifico
+22,Fontana_standard.r01,se WMS_BLOCCO_PRELIEVO_MATERIALI_COMMESSA = 1 e  se matricola...,WMS_BLOCCO_PRELIEVO_MATERIALI_COMMESSA,1,inline_uppercase_param,LOW,TP,Parametro reale ma doppio "se" abbassa score — falso LOW
+23,Fontana_standard.r01,-- URGE DETTAGLIATO 96805  VDG16  Import Matricole da rivedere BERA = 0,BERA,0,inline_uppercase_param,LOW,FP,Nel mezzo di un commento interno (URGE DETTAGLIATO) — non è un parametro
+24,Fontana_standard.r01,Relative a causali di produzione CAUCO_FTIPC = 0,CAUCO_FTIPC,0,inline_uppercase_param,HIGH,VERIFY,Citazione di un campo — verificare se è parametro di config o nome colonna DB
+25,MES_WEB_SERVIZI.r06,WMS_ASSOCIA_UMVPIU_INGRESSO_ORDINAMENTO= $DataCreazione DESC,WMS_ASSOCIA_UMVPIU_INGRESSO_ORDINAMENTO,$DataCreazione DESC,key_value_uppercase,HIGH,TP,Parametro con valore stringa SQL — tipo insolito ma reale
