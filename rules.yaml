@@ -191,11 +191,11 @@ extraction:
 database:
   path: "data/mes_docs.db"
 
-  # ATTENZIONE: recreate_on_run: true cancella e ricrea il DB ad ogni run.
+  # ATTENZIONE: recreate_on_run: false cancella e ricrea il DB ad ogni run.
   # Utile in sviluppo per partire pulito.
   # Mettere su FALSE in produzione, altrimenti si perdono tutti i dati ad ogni esecuzione.
   # Modalità incrementale (false): aggiorna solo i documenti modificati (confronto per data file).
-  recreate_on_run: true  # <-- cambia in false prima di andare in produzione
+  recreate_on_run: false  # <-- cambia in false prima di andare in produzione
 
   # Strategia per le revisioni dei documenti (es. r06 → r07)
   # "replace"   : sovrascrive il documento precedente (stesso filename senza revisione)
