@@ -103,6 +103,24 @@ def doc_short(filename: str) -> str:
     return filename.replace(".docx", "").replace(".r0", " r0")
 
 
+def file_url(full_path: str) -> str:
+    """Converte un path UNC Windows in URL file:// apribile dal browser."""
+    # \\server\share\path  →  file:////server/share/path
+    p = full_path.replace("\\", "/")
+    if p.startswith("//"):
+        return "file:" + p          # file:////rete-ud-2/...
+    return "file:///" + p.lstrip("/")
+
+
+@st.cache_data
+def get_doc_paths() -> dict[str, str]:
+    """Ritorna {filename: file_url} per tutti i documenti."""
+    if not db_ok(conn):
+        return {}
+    rows = conn.execute("SELECT filename, full_path FROM documents").fetchall()
+    return {r[0]: file_url(r[1]) for r in rows}
+
+
 # ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
@@ -187,13 +205,17 @@ with tab_cerca:
             if not rows:
                 st.info("Nessun risultato. Prova parole diverse o rimuovi il filtro documento.")
             else:
+                doc_paths = get_doc_paths()
                 st.caption(f"{len(rows)} risultati per: *{query}*")
                 for row in rows:
                     section = row["section_title"] or "—"
+                    url = doc_paths.get(row["doc_filename"], "")
+                    link = f" · [📂 apri]({url})" if url else ""
                     with st.expander(
                         f"📄 **{doc_short(row['doc_filename'])}** — {section[:70]}",
                         expanded=True
                     ):
+                        st.caption(f"`{row['doc_filename']}`{link}")
                         hl = highlight_text(row["text"], query)
                         st.markdown(hl)
 
@@ -269,9 +291,12 @@ with tab_params:
                 by_doc.setdefault(row["filename"], []).append(row)
 
             conf_badge = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}
+            doc_paths = get_doc_paths()
 
             for filename, doc_rows in by_doc.items():
-                st.subheader(f"📄 {doc_short(filename)}", divider="gray")
+                url = doc_paths.get(filename, "")
+                link = f" [📂]({url})" if url else ""
+                st.subheader(f"📄 {doc_short(filename)}{link}", divider="gray")
                 for row in doc_rows:
                     badge  = conf_badge.get(row["confidence"], "⚪")
                     section = row["section_title"] or "—"
@@ -323,10 +348,12 @@ with tab_docs:
         c4.metric("Parametri totali", f"{tot_par:,}")
         st.divider()
 
-        # Tabella
+        # Tabella con link
+        doc_paths = get_doc_paths()
         table_data = []
         for r in docs:
             tags = r["tags"].strip("[]").replace("'", "") if r["tags"] else ""
+            url = doc_paths.get(r["filename"], "")
             table_data.append({
                 "File": doc_short(r["filename"]),
                 "Label": r["label"] or "",
@@ -335,8 +362,14 @@ with tab_docs:
                 "Tabelle": r["tables_n"],
                 "Parametri": r["parameters_n"],
                 "Tag": tags,
+                "Apri": url,
             })
-        st.dataframe(table_data, use_container_width=True, hide_index=True)
+        st.dataframe(
+            table_data,
+            use_container_width=True,
+            hide_index=True,
+            column_config={"Apri": st.column_config.LinkColumn("📂", display_text="apri")},
+        )
 
         # Explorer sezioni di un documento
         st.divider()
@@ -348,6 +381,9 @@ with tab_docs:
             key="doc_exp"
         )
         if doc_sel:
+            url = doc_paths.get(doc_sel, "")
+            if url:
+                st.markdown(f"[📂 Apri documento originale]({url})")
             doc_id = conn.execute(
                 "SELECT id FROM documents WHERE filename=?", (doc_sel,)
             ).fetchone()["id"]
