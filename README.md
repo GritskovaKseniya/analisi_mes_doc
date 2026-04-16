@@ -1,14 +1,14 @@
-# Analisi MES Doc
+# MES Knowledge Base
 
-Strumento per indicizzare, cercare e navigare le specifiche tecniche MES (Manufacturing Execution System) in formato Word `.docx`.
+Piattaforma per indicizzare, cercare e navigare le specifiche tecniche MES (Manufacturing Execution System) in formato Word `.docx`.
 
 ## Problema
 
-Le specifiche MES sono distribuite su ~27 documenti Word, alcuni con oltre 14.000 paragrafi. Trovare un parametro di configurazione o capire come funziona una funzionalità richiede ore di ricerca manuale.
+Le specifiche MES sono distribuite su 28 documenti Word, alcuni con oltre 14.000 paragrafi. Trovare un parametro di configurazione o capire come funziona una funzionalità richiede ore di ricerca manuale.
 
 ## Soluzione
 
-Pipeline che estrae il contenuto strutturato (sezioni, paragrafi, tabelle, parametri di configurazione) e lo indicizza in un database SQLite interrogabile. In futuro: ricerca semantica e assistente RAG con Ollama.
+Pipeline che estrae il contenuto strutturato (sezioni, paragrafi, tabelle, parametri) e lo indicizza in SQLite. Interfaccia web con ricerca full-text, browser parametri e assistente AI locale (Ollama).
 
 ## Architettura
 
@@ -16,69 +16,121 @@ Pipeline che estrae il contenuto strutturato (sezioni, paragrafi, tabelle, param
 Documenti .docx (rete)
         │
         ▼
-  Extraction layer     ← python-docx, regole in rules.yaml
-  (headings, paragrafi,
+  extract.py          ← python-docx + rules.yaml
+  (heading, paragrafi,
    tabelle, parametri)
         │
         ▼
-   SQLite (mes_docs.db) ← storage principale, FTS5 full-text search
+  SQLite mes_docs.db  ← FTS5 full-text search
         │
-        ├──► JSON export
-        └──► Query / Search CLI
+        ├──► search.py   (CLI ricerca)
+        ├──► rag.py       (CLI assistente)
+        └──► app.py       (Streamlit UI)
                 │
                 ▼
-          Ollama RAG        ← modello locale leggero (futuro)
+          Ollama (llama3.2) — RAG locale, nessun dato esterno
 ```
 
 ## Stato del progetto
 
 | Step | Descrizione | Stato |
 |------|-------------|-------|
-| 0 | Script ispezione struttura documenti | ✅ |
+| 0 | Script ispezione struttura documenti (`inspect_doc.py`) | ✅ |
 | 1 | Setup + `rules.yaml` configurabile | ✅ |
-| 2 | Extraction pipeline (un file → SQLite) | ⬜ |
-| 3 | Salvataggio SQLite schema completo | ⬜ |
-| 4 | Rilevamento parametri CHIAVE=VALORE | ⬜ |
-| 5 | Pipeline completa tutti i documenti | ⬜ |
-| 6 | Ricerca FTS5 da terminale | ⬜ |
-| 7 | RAG con Ollama | ⬜ |
+| 2-4 | Extraction pipeline → SQLite + rilevamento parametri | ✅ |
+| 5 | Pipeline completa su tutti i 28 documenti | ✅ |
+| 6 | Ricerca FTS5 da terminale (`search.py`) | ✅ |
+| 7 | Assistente RAG con Ollama (`rag.py`) | ✅ |
+| 8 | Streamlit UI — 4 tab (Cerca, Parametri, Documenti, Assistente) | ✅ |
 
-## File
+## Dati indicizzati
 
-| File | Descrizione |
-|------|-------------|
-| `inspect_doc.py` | Step 0 — ispeziona struttura reale di un `.docx` |
-| `rules.yaml` | Configurazione: file sorgente, pattern parametri, opzioni DB |
-| `truth_table.csv` | Dataset di verità per misurare precision del rilevamento parametri |
-| `drp_progetto.md` | Documento di riferimento del progetto (architettura, decisioni, piano) |
+| | |
+|---|---|
+| Documenti | **28** |
+| Paragrafi | **36.043** |
+| Sezioni | **1.888** |
+| Parametri rilevati | **1.386** |
+| Righe FTS indicizzate | **35.883** |
 
-## Uso rapido
+## Installazione
 
 ```bash
-pip install python-docx
+# Clona il repo
+git clone https://github.com/GritskovaKseniya/analisi_mes_doc.git
+cd analisi_mes_doc
 
-# Statistiche su un documento
-python inspect_doc.py "path/al/file.docx" --stats
+# Installa tutto (dipendenze + Ollama + modello + indicizzazione)
+python setup.py
+```
 
-# Mostra i parametri rilevati con confidenza
-python inspect_doc.py "path/al/file.docx" --params
+Oppure manualmente:
 
-# Mostra paragrafi che contengono una parola chiave
-python inspect_doc.py "path/al/file.docx" --search "WMS_ABIL"
+```bash
+pip install python-docx pyyaml streamlit
 
-# Mostra solo i titoli (Heading 1)
-python inspect_doc.py "path/al/file.docx" --style "Heading 1"
+# Installa Ollama da https://ollama.com, poi:
+ollama pull llama3.2
 
-# Mostra struttura tabelle
-python inspect_doc.py "path/al/file.docx" --tables --limit 10
+# Indicizza i documenti
+python extract.py
+
+# Avvia la UI
+streamlit run app.py
+```
+
+## Comandi disponibili
+
+### UI web
+```bash
+streamlit run app.py          # apre http://localhost:8501
+```
+
+### Ricerca da terminale
+```bash
+python search.py "versamento matricola"
+python search.py "blocco stop" --doc fontana --context
+python search.py --param "WMS_TIPO" --high-only
+python search.py "UMV" --section "setup base" --limit 20
+```
+
+### Assistente AI
+```bash
+python rag.py "come si configura il versamento a matricola?"
+python rag.py "cosa fa WMS_ABIL_GIACENZE_SU_UMV?"
+python rag.py --interactive          # modalità chat continua
+```
+
+### Pipeline estrazione
+```bash
+python extract.py                    # (ri)indicizza tutti i documenti
+python extract.py --only "Fontana"   # solo un documento
+python extract.py --build-fts        # rebuild indice FTS senza riestrarre
+python extract.py --dry-run          # simula senza scrivere
+```
+
+### Ispezione documenti
+```bash
+python inspect_doc.py "path/file.docx" --stats
+python inspect_doc.py "path/file.docx" --params
+python inspect_doc.py "path/file.docx" --search "WMS_ABIL"
+python inspect_doc.py "path/file.docx" --style "Heading 1"
 ```
 
 ## Configurazione
 
 Modifica `rules.yaml` per:
-- Aggiungere/rimuovere documenti sorgente (sezione `sources`)
-- Cambiare i pattern di rilevamento parametri (sezione `parameter_patterns`)
-- Impostare il path del database di output (sezione `database`)
+- Aggiungere/rimuovere documenti sorgente (`sources`)
+- Cambiare i pattern di rilevamento parametri (`parameter_patterns`)
+- Impostare path DB e strategia revisioni (`database`)
+
+```yaml
+# Esempio: aggiungere un nuovo documento
+sources:
+  - path: "NUOVO_CLIENTE/nuovo_doc.r01.docx"
+    label: "Nuovo Doc"
+    tags: [cliente, modulo]
+```
 
 ## Rilevamento parametri — precision baseline
 
@@ -86,25 +138,41 @@ Sul campione `truth_table.csv` (25 righe, etichette manuali):
 
 | Confidenza | Campioni | Precision stimata |
 |------------|----------|-------------------|
-| HIGH | 14 | 71% (target: >85% dopo fix) |
+| HIGH | 14 | 71% (migliorabile con blacklist SQL/test) |
 | MEDIUM | 2 | 100% |
 | LOW | 3 | 67% |
 
-Falsi positivi HIGH noti: query SQL (`SELECT/WHERE`), dati ambiente test (`radaid`, `jas`).
+Falsi positivi HIGH noti: contesto SQL (`SELECT/WHERE`), dati ambiente test (`radaid`, `jas`).
 
-## Dipendenze
+## File del progetto
 
-```
-python-docx
-pyyaml       # per leggere rules.yaml nella pipeline (Step 2+)
-```
+| File | Descrizione |
+|------|-------------|
+| `app.py` | Streamlit UI — 4 tab: Cerca, Parametri, Documenti, Assistente |
+| `extract.py` | Pipeline estrazione `.docx` → SQLite + FTS5 |
+| `search.py` | Ricerca full-text e per parametri da terminale |
+| `rag.py` | Assistente RAG con Ollama |
+| `inspect_doc.py` | Ispezione struttura documenti (step 0) |
+| `rules.yaml` | Configurazione sorgenti, pattern, DB |
+| `setup.py` | Script installazione one-shot |
+| `truth_table.csv` | Dataset verità per validazione precision |
+| `drp_progetto.md` | Documento di riferimento architettura e decisioni |
 
-## Stack previsto
+## Stack
 
 | Layer | Tecnologia |
 |-------|------------|
 | Parsing | python-docx |
 | Storage | SQLite + FTS5 |
 | Config | YAML |
-| AI locale | Ollama (llama3.2 / phi3) |
-| UI (futuro) | Streamlit |
+| Ricerca | SQLite FTS5 (BM25) |
+| AI locale | Ollama — llama3.2 |
+| UI | Streamlit |
+| Linguaggio | Python 3.10+ |
+
+## Requisiti
+
+- Python 3.10+
+- Accesso alla share di rete `\\rete-ud-2\Documents\eDox\...`
+- [Ollama](https://ollama.com) installato (per l'assistente AI)
+- ~2 GB disco per il modello `llama3.2`
